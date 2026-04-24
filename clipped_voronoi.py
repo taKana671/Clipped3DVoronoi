@@ -1,6 +1,7 @@
 import sys
 from enum import Enum, auto
 
+import yaml
 from direct.showbase.ShowBase import ShowBase
 from direct.showbase.ShowBaseGlobal import globalClock
 from panda3d.bullet import BulletWorld, BulletDebugNode
@@ -31,7 +32,7 @@ class Status(Enum):
 
 class ClippedVoronoi(ShowBase):
 
-    def __init__(self):
+    def __init__(self, clipping_config):
         super().__init__()
         self.disable_mouse()
         self.render.set_antialias(AntialiasAttrib.MAuto)
@@ -48,7 +49,7 @@ class ClippedVoronoi(ShowBase):
         self.camera.look_at(Point3(0, 0, 0))
 
         self.scene = Scene()
-        self.scene.create_voronoi_cells()
+        self.scene.create_voronoi_cube(clipping_config)
         self.scene.setup_light()
 
         self.clicked = False
@@ -129,6 +130,13 @@ class ClippedVoronoi(ShowBase):
         return task.cont
 
 
-if __name__ == '__main__':
-    app = ClippedVoronoi()
+def main():
+    with open('clipping_config.yaml', 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+
+    app = ClippedVoronoi(config)
     app.run()
+
+
+if __name__ == '__main__':
+    main()

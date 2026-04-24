@@ -1,16 +1,13 @@
 import time
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 from panda3d.bullet import BulletRigidBodyNode
-from panda3d.bullet import BulletTriangleMeshShape, BulletTriangleMesh
-from panda3d.bullet import BulletConvexHullShape, BulletPlaneShape, BulletCylinderShape, ZUp
-from panda3d.core import NodePath, PandaNode
+from panda3d.bullet import BulletConvexHullShape, BulletPlaneShape
+from panda3d.core import NodePath
 from panda3d.core import Point3, Vec3, BitMask32, LColor
-from panda3d.core import TextureStage, TransformState, TexGenAttrib
 from panda3d.core import AmbientLight, DirectionalLight
 
-from voronoi_generator.voronoi_3d.clip2cube.visualize import visualize
 from voronoi_generator.voronoi_3d.clip2cube.clip2cube import VoronoiClipped2Cube
 from shapes import RandomConvexPolyhedron
 
@@ -73,93 +70,60 @@ class Scene:
         directional_light.node().set_shadow_caster(True)
         base.render.set_shader_auto()
 
-    def create_voronoi_cells2(self):
-        start = time.perf_counter()
-        scale = 2  # scaleを1にしてcube_sizeを上げ、creator.polyhedron_org_centerにscaleをかけない。
+    def create_voronoi_cube(self, config):
+        if config['multi_processing']:
+            self.clip_multoprocess(**config['clipping'], **config['polyhedron'])
+        else:
+            self.clip(**config['clipping'], **config['polyhedron'])
 
-        for i, clipped_vertices in enumerate(VoronoiClipped2Cube(cut_points=30)):
-
-            model_creator = RandomConvexPolyhedron(clipped_vertices, max_depth=2, scale=scale)
-            model = model_creator.create()
-
-            color = LColor(*np.random.uniform(0, 1, 3), 1)
-            diff = Vec3(scale / 2, scale / 2, 0)
-            pos = Point3(*model_creator.polyhedron_org_center * scale) - diff
-            voronoi_cell = VoronoiCell3D(i, model, pos, color)
-            voronoi_cell.reparent_to(self.cells)
-
-            # When changing a static body to a rigid body and applying a force, the `apply_central_force` function only worked
-            # if assigning a mass greater than 0, attaching it to the world, then set the mass to 0, and finally changed it back to 1 
-            # when applying the force.
-            base.world.attach(voronoi_cell.node())
-            voronoi_cell.node().set_mass(0)
-
-        print(f'Took {time.perf_counter() - start}')
-
-
-    def create_cell(self, clipped_vertices, scale, i):
-        model_creator = RandomConvexPolyhedron(clipped_vertices, max_depth=2, scale=scale)
+    def create_voronoi_cell(self, vertices, serial, cube_size, max_depth, scale):
+        model_creator = RandomConvexPolyhedron(vertices, max_depth, scale)
         model = model_creator.create()
 
+        n = scale * cube_size / 2
+        pos = Point3(*model_creator.polyhedron_org_center * scale) - Vec3(n, n, 0)
         color = LColor(*np.random.uniform(0, 1, 3), 1)
-        diff = Vec3(scale / 2, scale / 2, 0)
-        pos = Point3(*model_creator.polyhedron_org_center * scale) - diff
-        voronoi_cell = VoronoiCell3D(i, model, pos, color)
-        # voronoi_cell.reparent_to(self.cells)
-
-        # When changing a static body to a rigid body and applying a force, the `apply_central_force` function only worked
-        # if assigning a mass greater than 0, attaching it to the world, then set the mass to 0, and finally changed it back to 1 
-        # when applying the force.
-        # base.world.attach(voronoi_cell.node())
-        # voronoi_cell.node().set_mass(0)
+        voronoi_cell = VoronoiCell3D(serial, model, pos, color)
 
         return voronoi_cell
 
+    def attach_voronoi_cell(self, voronoi_cell):
+        # When changing a static body to a rigid body and applying a force, the `apply_central_force` only worked
+        # if assigning a mass greater than 0, attaching it to the world, then set the mass to 0, and finally
+        # changed it back to 1 when applying the force.
+        voronoi_cell.reparent_to(self.cells)
+        base.world.attach(voronoi_cell.node())
+        voronoi_cell.node().set_mass(0)
 
-    def create_voronoi_cells(self):
+    def clip(self, cut_points, cube_size, diff, max_depth, scale):
+        """Clip voronoi cells to cube.
+            Args:
+                cut_points(int): the number of polyhedrons to divide a cube into.
+                cube_size (float): length of a cube's edge.
+                diff (float): how far from the vertices of the cube the dummy points should be placed.
+                max_depth (int): the number of divisions of one triangle; cannot be negative.
+                scale (float): the scale of the polyhedron; greater than 0.
+        """
         start = time.perf_counter()
-        scale = 2  # scaleを1にしてcube_sizeを上げ、creator.polyhedron_org_centerにscaleをかけない。
-        results = []
 
-        with ProcessPoolExecutor() as executor:
-            for i, clipped_vertices in enumerate(VoronoiClipped2Cube(cut_points=30)):
-                results.append(executor.submit(self.create_cell, clipped_vertices, scale, i))
-
-                # model_creator = RandomConvexPolyhedron(clipped_vertices, max_depth=3, scale=scale)
-                # model = model_creator.create()
-
-                # color = LColor(*np.random.uniform(0, 1, 3), 1)
-                # diff = Vec3(scale / 2, scale / 2, 0)
-                # pos = Point3(*model_creator.polyhedron_org_center * scale) - diff
-                # voronoi_cell = VoronoiCell3D(i, model, pos, color)
-                # voronoi_cell.reparent_to(self.cells)
-
-                # # When changing a static body to a rigid body and applying a force, the `apply_central_force` function only worked
-                # # if assigning a mass greater than 0, attaching it to the world, then set the mass to 0, and finally changed it back to 1 
-                # # when applying the force.
-                # base.world.attach(voronoi_cell.node())
-                # voronoi_cell.node().set_mass(0)
-
-        for result in results:
-            # model, center = result.result()
-            # color = LColor(*np.random.uniform(0, 1, 3), 1)
-            # diff = Vec3(scale / 2, scale / 2, 0)
-            # pos = Point3(*center * scale) - diff
-            # voronoi_cell = VoronoiCell3D(i, model, pos, color)
-
-            voronoi_cell = result.result()
-            voronoi_cell.reparent_to(self.cells)
-
-            # When changing a static body to a rigid body and applying a force, the `apply_central_force` function only worked
-            # if assigning a mass greater than 0, attaching it to the world, then set the mass to 0, and finally changed it back to 1 
-            # when applying the force.
-            base.world.attach(voronoi_cell.node())
-            voronoi_cell.node().set_mass(0)
-
-
+        for serial, vertices in enumerate(VoronoiClipped2Cube(cut_points, cube_size, diff)):
+            voronoi_cell = self.create_voronoi_cell(vertices, serial, cube_size, max_depth, scale)
+            self.attach_voronoi_cell(voronoi_cell)
 
         print(f'Took {time.perf_counter() - start}')
-        # import pdb; pdb.set_trace()
+
+    def clip_multoprocess(self, cut_points, cube_size, diff, max_depth, scale):
+        start = time.perf_counter()
+
+        with ProcessPoolExecutor() as executor:
+            results = [executor.submit(self.create_voronoi_cell, vertices, serial, cube_size, max_depth, scale)
+                       for serial, vertices in enumerate(VoronoiClipped2Cube(cut_points, cube_size, diff))]
+
+        for result in results:
+            voronoi_cell = result.result()
+            self.attach_voronoi_cell(voronoi_cell)
+
+        print(f'Took {time.perf_counter() - start}')
 
     def set_mass_to_cells(self):
         for voroni_cell in self.cells.get_children():
@@ -169,18 +133,3 @@ class Scene:
     def apply_force(self):
         for voronoi_cell in self.cells.get_children():
             voronoi_cell.node().apply_central_force(Vec3.up() * 10)
-
-
-        
-
-# def create_cell(clipped_vertices, scale, i):
-#     model_creator = RandomConvexPolyhedron(clipped_vertices, max_depth=3, scale=scale)
-#     model = model_creator.create()
-
-#     color = LColor(*np.random.uniform(0, 1, 3), 1)
-#     diff = Vec3(scale / 2, scale / 2, 0)
-#     pos = Point3(*model_creator.polyhedron_org_center * scale) - diff
-#     voronoi_cell = VoronoiCell3D(i, model, pos, color)
-
-#     return voronoi_cell
-    # return model, model_creator.polyhedron_org_center
