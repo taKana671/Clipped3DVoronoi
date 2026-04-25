@@ -6,6 +6,10 @@ The parameters for the Voronoi partition and the 3D model are managed in `clippi
 If you want to increase the number of Voronoi partitions (`cut_points`) or the number of times the 3D model’s faces are subdivided into triangles (`max_depth`), setting `multi_processing` to `true`
 will speed up the creation of the 3D models.
 
+
+https://github.com/user-attachments/assets/3e22177f-7adf-4b17-9da3-19c6ed141d06
+
+
 # Requirements
 
 * Panda3D 1.10.16
