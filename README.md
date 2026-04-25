@@ -27,7 +27,7 @@ https://github.com/user-attachments/assets/3e22177f-7adf-4b17-9da3-19c6ed141d06
 
 ### Clone this repository with submodule.
 ```
-git clone --recursive https://github.com/taKana671/3DVoronoiModel.git
+git clone --recursive https://github.com/taKana671/Clipped3DVoronoi.git
 ```
 
 #### Execute the following command
