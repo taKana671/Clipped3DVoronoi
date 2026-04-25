@@ -30,12 +30,12 @@ https://github.com/user-attachments/assets/3e22177f-7adf-4b17-9da3-19c6ed141d06
 git clone --recursive https://github.com/taKana671/Clipped3DVoronoi.git
 ```
 
-#### Execute the following command
+### Execute the following command
 ```
 python clipped_voronoi.py
 ```
 
-#### Key control
+### Key control
 
 <table>
     <tr>
@@ -60,7 +60,7 @@ python clipped_voronoi.py
     </tr>
 </table>
 
-#### Parameters
+### Parameters
 
 If you edit `clipping_config.yaml` and then run `clipped_voronoi.py`, the updated values will be reflected in the output.
 
