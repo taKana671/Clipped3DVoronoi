@@ -1,0 +1,8 @@
+clipping:
+  cut_points: 30
+  cube_size: 1
+  diff: 0.5
+polyhedron:
+  max_depth: 2
+  scale: 2
+multi_processing: false
