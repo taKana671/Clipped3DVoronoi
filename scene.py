@@ -8,7 +8,7 @@ from panda3d.core import NodePath
 from panda3d.core import Point3, Vec3, BitMask32, LColor
 from panda3d.core import AmbientLight, DirectionalLight
 
-from voronoi_generator.voronoi_3d.clip2cube.clip2cube import VoronoiClipped2Cube
+from voronoi_generator.voronoi_3d.clip2cube import VoronoiClipped2Cube
 from shapes import RandomConvexPolyhedron
 
 
