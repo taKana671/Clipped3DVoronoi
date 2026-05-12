@@ -10,7 +10,7 @@ from panda3d.core import NodePath
 from panda3d.core import AntialiasAttrib
 from panda3d.core import load_prc_file_data
 
-from scene import Scene
+from scene import Scene, SphereClipping
 
 
 load_prc_file_data("", """
@@ -45,10 +45,13 @@ class ClippedVoronoi(ShowBase):
         self.camera_root = NodePath('camera_root')
         self.camera_root.reparent_to(self.render)
         self.camera.reparent_to(self.camera_root)
-        self.camera.set_pos(Point3(0, -10, 10))
+        # self.camera.set_pos(Point3(0, -10, 10))
+        self.camera.set_pos(Point3(0, -10, 20))
+
         self.camera.look_at(Point3(0, 0, 0))
 
-        self.scene = Scene()
+        # self.scene = Scene()
+        self.scene = SphereClipping()
         self.scene.create_voronoi_cube(clipping_config)
         self.scene.setup_light()
 
