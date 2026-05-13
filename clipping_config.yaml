@@ -1,12 +1,12 @@
 cube:
   cut_points: 30
-  cube_size: 2
+  cube_size: 1
   diff: 0.5
   max_depth: 3
   scale: 2
-  multi_processing: false
+  multi_processing: true
 sphere:
   cut_points: 30
   max_depth: 3
-  scale: 2
-  multi_processing: false
+  scale: 1
+  multi_processing: true

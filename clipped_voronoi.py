@@ -1,22 +1,20 @@
 import sys
 from enum import Enum, auto
 
-import yaml
 from direct.showbase.ShowBase import ShowBase
 from direct.showbase.ShowBaseGlobal import globalClock
+from panda3d.core import AmbientLight, DirectionalLight
 from panda3d.bullet import BulletWorld, BulletDebugNode
-from panda3d.core import Point3, Vec3, Vec2
+from panda3d.core import Point3, Vec3, Vec2, LColor
 from panda3d.core import NodePath
 from panda3d.core import AntialiasAttrib
 from panda3d.core import load_prc_file_data
-
-from scene import Scene, SphereClipping
 
 
 load_prc_file_data("", """
     textures-power-2 none
     gl-coordinate-system default
-    window-title Panda3D Voronoi City
+    window-title Clipped3DVoronoi
     filled-wireframe-apply-shader true
     stm-max-views 8
     stm-max-chunk-count 2048
@@ -32,7 +30,7 @@ class Status(Enum):
 
 class ClippedVoronoi(ShowBase):
 
-    def __init__(self, clipping_config):
+    def __init__(self, scene, config):
         super().__init__()
         self.disable_mouse()
         self.render.set_antialias(AntialiasAttrib.MAuto)
@@ -45,15 +43,14 @@ class ClippedVoronoi(ShowBase):
         self.camera_root = NodePath('camera_root')
         self.camera_root.reparent_to(self.render)
         self.camera.reparent_to(self.camera_root)
-        # self.camera.set_pos(Point3(0, -10, 10))
-        self.camera.set_pos(Point3(0, -10, 20))
+        self.camera.set_pos(Point3(0, -10, 10))
+        # self.camera.set_pos(Point3(0, -10, 20))
 
         self.camera.look_at(Point3(0, 0, 0))
 
-        # self.scene = Scene()
-        self.scene = SphereClipping()
-        self.scene.create_voronoi_cube(clipping_config)
-        self.scene.setup_light()
+        self.scene = scene()
+        self.scene.create_voronoi_cells(config)
+        self.setup_light()
 
         self.clicked = False
         self.dragging = False
@@ -69,6 +66,22 @@ class ClippedVoronoi(ShowBase):
         self.accept('u', self.apply_force)
 
         self.taskMgr.add(self.update, 'update')
+
+    def setup_light(self):
+        ambient_light = NodePath(AmbientLight('ambient_light'))
+        ambient_light.reparent_to(self.render)
+        ambient_light.node().set_color(LColor(0.6, 0.6, 0.6, 1.0))
+        self.render.set_light(ambient_light)
+
+        directional_light = NodePath(DirectionalLight('directional_light'))
+        directional_light.node().get_lens().set_film_size(200, 200)
+        directional_light.node().get_lens().set_near_far(1, 100)
+        directional_light.node().set_color(LColor(1, 1, 1, 1))
+        directional_light.set_pos_hpr(Point3(0, 0, 50), Vec3(-30, -45, 0))
+        # directional_light.node().show_frustom()
+        self.render.set_light(directional_light)
+        directional_light.node().set_shadow_caster(True)
+        self.render.set_shader_auto()
 
     def apply_force(self):
         self.status = Status.SET_MASS
@@ -131,15 +144,3 @@ class ClippedVoronoi(ShowBase):
 
         self.world.do_physics(dt)
         return task.cont
-
-
-def main():
-    with open('clipping_config.yaml', 'r', encoding='utf-8') as f:
-        config = yaml.safe_load(f)
-
-    app = ClippedVoronoi(config)
-    app.run()
-
-
-if __name__ == '__main__':
-    main()
