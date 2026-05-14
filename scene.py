@@ -5,7 +5,7 @@ import numpy as np
 from panda3d.bullet import BulletRigidBodyNode
 from panda3d.bullet import BulletConvexHullShape, BulletPlaneShape
 from panda3d.core import NodePath
-from panda3d.core import Point3, Vec3, BitMask32, LColor
+from panda3d.core import BitMask32, Point3, Vec3, LColor
 
 from shapes import RandomConvexPolyhedron, ShatteredSphere
 from utils import clock
