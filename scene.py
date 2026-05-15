@@ -147,19 +147,19 @@ class CubeClipping(ClippingMixin, Scene):
                 scale (float): the scale of the polyhedron; greater than 0.
         """
         for i, polygons in enumerate(VoronoiClipped2Cube(cut_points, cube_size, diff)):
-            voronoi_cell = self.create_voronoi_cell(i, polygons, max_depth, scale)
+            voronoi_cell = self.create_voronoi_cell(i, polygons, max_depth, cube_size, scale)
             self.attach_voronoi_cell(voronoi_cell)
 
     @clock()
     def clip_multiprocess(self, cut_points, cube_size, diff, max_depth, scale):
         with ProcessPoolExecutor() as executor:
-            futures = [executor.submit(self.create_voronoi_cell, i, polygons, max_depth, scale)
+            futures = [executor.submit(self.create_voronoi_cell, i, polygons, max_depth, cube_size, scale)
                        for i, polygons in enumerate(VoronoiClipped2Cube(cut_points, cube_size, diff))]
 
         self.get_future_result(futures)
 
-    def create_voronoi_cell(self, serial, polygons, max_depth, scale):
+    def create_voronoi_cell(self, serial, polygons, max_depth, cube_size, scale):
         model_creator = RandomConvexPolyhedron(polygons, max_depth, scale)
-        voronoi_cell = self.create_voronoi_model(model_creator, serial, scale, Vec3(0))
+        voronoi_cell = self.create_voronoi_model(model_creator, serial, scale, Vec3(0, 0, cube_size * 0.5))
 
         return voronoi_cell
