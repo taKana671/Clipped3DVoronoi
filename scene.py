@@ -9,8 +9,8 @@ from panda3d.core import BitMask32, Point3, Vec3, LColor
 
 from shapes import RandomConvexPolyhedron, ShatteredSphere
 from utils import clock
-from voronoi_generator.voronoi_3d.clip2cube import VoronoiClipped2Cube
-from voronoi_generator.voronoi_3d.clip2sphere import VoronoiClipped2Sphere
+from voronoi_generator.voronoi_3d.clip2cube import VoronoiClip2Cube
+from voronoi_generator.voronoi_3d.clip2sphere import VoronoiClip2Sphere
 
 
 class VoronoiCell3D(NodePath):
@@ -115,7 +115,7 @@ class SphereClipping(ClippingMixin, Scene):
                 max_depth (int): the number of divisions of one triangle; cannot be negative.
                 scale (float): the scale of the polyhedron; greater than 0.
         """
-        for i, (polygons, spherical_idx) in enumerate(VoronoiClipped2Sphere(cut_points)):
+        for i, (polygons, spherical_idx) in enumerate(VoronoiClip2Sphere(cut_points)):
             voronoi_cell = self.create_voronoi_cell(i, polygons, spherical_idx, max_depth, scale)
             self.attach_voronoi_cell(voronoi_cell)
 
@@ -123,7 +123,7 @@ class SphereClipping(ClippingMixin, Scene):
     def clip_multiprocess(self, cut_points, max_depth, scale):
         with ProcessPoolExecutor() as executor:
             futures = [executor.submit(self.create_voronoi_cell, i, polygons, spherical_idx, max_depth, scale)
-                       for i, (polygons, spherical_idx) in enumerate(VoronoiClipped2Sphere(cut_points))]
+                       for i, (polygons, spherical_idx) in enumerate(VoronoiClip2Sphere(cut_points))]
 
         self.get_future_result(futures)
 
@@ -146,7 +146,7 @@ class CubeClipping(ClippingMixin, Scene):
                 max_depth (int): the number of divisions of one triangle; cannot be negative.
                 scale (float): the scale of the polyhedron; greater than 0.
         """
-        for i, polygons in enumerate(VoronoiClipped2Cube(cut_points, cube_size, diff)):
+        for i, polygons in enumerate(VoronoiClip2Cube(cut_points, cube_size, diff)):
             voronoi_cell = self.create_voronoi_cell(i, polygons, max_depth, cube_size, scale)
             self.attach_voronoi_cell(voronoi_cell)
 
@@ -154,7 +154,7 @@ class CubeClipping(ClippingMixin, Scene):
     def clip_multiprocess(self, cut_points, cube_size, diff, max_depth, scale):
         with ProcessPoolExecutor() as executor:
             futures = [executor.submit(self.create_voronoi_cell, i, polygons, max_depth, cube_size, scale)
-                       for i, polygons in enumerate(VoronoiClipped2Cube(cut_points, cube_size, diff))]
+                       for i, polygons in enumerate(VoronoiClip2Cube(cut_points, cube_size, diff))]
 
         self.get_future_result(futures)
 
