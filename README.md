@@ -68,8 +68,7 @@ python clip_to_sphere.py
 
 ### Parameters
 
-If you edit `clipping_config.yaml` and then run `clip_to_cube.py` or `clip_to_sphere.py`, the updated values will be reflected in the output.
-After profiling with cProfile and refactoring the code, both `clip_to_cube.py` and `clip_to_sphere.py` now run in about 4 seconds, which is not much different from when I was using multiprocessing. Some NumPy methods (such as `numpy.cross`) were taking a significant amount of time when repeatedly called with small arrays like `shape=(3,)` as arguments. After changing the implementation to avoid using these NumPy methods, the speed improved.
+After profiling with cProfile and refactoring the code, the time taken to run `clip_to_cube.py` or `clip_to_sphere.py` with the default settings in `clipping_config.yaml` is now around 4 seconds, which is nearly the same as when using multiple processes. Some NumPy methods (such as `numpy.cross`) were taking a significant amount of time when repeatedly called with small arrays like `shape=(3,)` as arguments. After changing the implementation to avoid using these NumPy methods, the speed improved.
 
 #### cube
 
