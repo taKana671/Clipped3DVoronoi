@@ -1,13 +1,15 @@
 # Clipped3DVoronoi
 
-I used SciPy’s `scipy.spatial.Voronoi` to perform a 3D Voronoi partition, calculated the vertices of the Voronoi regions (polyhedra), and clipped them with a cube. Finally, I created 3D models of the Voronoi regions from the clipped vertices.
-Clone the repository, run `clipped_voronoi.py`, and press the [U] key on your keyboard. A force is applied to each model, causing the cube to collapse.
-The parameters for the Voronoi partition and the 3D model are managed in `clipping_config.yaml`.
-If you want to increase the number of Voronoi partitions (`cut_points`) or the number of times the 3D model’s faces are subdivided into triangles (`max_depth`), setting `multi_processing` to `true`
-will speed up the creation of the 3D models.
+I used SciPy’s `scipy.spatial.Voronoi` to perform a 3D Voronoi partition, clipped the Voronoi regions (polyhedra) to a cube or sphere, and created 3D models of the Voronoi regions from the clipped vertices. Clone the repository, run `clip_to_cube.py` or `clip_to_sphere.py`, and press the [U] key on your keyboard. A force is applied to the 3D models, causing them to collapse. The parameters for the Voronoi partitioning and 3D models are managed in `clipping_config.yaml`. If you want to increase the number of Voronoi cuts (`cut_points`) or the number of times the 3D model’s faces are subdivided into triangles (`max_depth`), setting `multi_processing` to `true` will speed up the generation of the 3D models.
 
+## cube
 
 https://github.com/user-attachments/assets/3e22177f-7adf-4b17-9da3-19c6ed141d06
+
+
+## sphere
+
+https://github.com/user-attachments/assets/325c680f-1254-4bdd-871f-00aa0c2d31a8
 
 
 # Requirements
@@ -32,7 +34,11 @@ git clone --recursive https://github.com/taKana671/Clipped3DVoronoi.git
 
 ### Execute the following command
 ```
-python clipped_voronoi.py
+# cube
+python clip_to_cube.py
+
+# sphere
+python clip_to_sphere.py
 ```
 
 ### Key control
@@ -62,10 +68,13 @@ python clipped_voronoi.py
 
 ### Parameters
 
-If you edit `clipping_config.yaml` and then run `clipped_voronoi.py`, the updated values will be reflected in the output.
+If you edit `clipping_config.yaml` and then run `clip_to_cube.py` or `clip_to_sphere.py`, the updated values will be reflected in the output.
+After profiling with cProfile and refactoring the code, both `clip_to_cube.py` and `clip_to_sphere.py` now run in about 4 seconds, which is not much different from when I was using multiprocessing. Some NumPy methods (such as `numpy.cross`) were taking a significant amount of time when repeatedly called with small arrays like `shape=(3,)` as arguments. After changing the implementation to avoid using these NumPy methods, the speed improved.
+
+#### cube
 
 <table>
-    <tr>
+   <tr>
       <th>parameter</th>
       <th>data type</th>
       <th>default</th>
@@ -92,7 +101,7 @@ If you edit `clipping_config.yaml` and then run `clipped_voronoi.py`, the update
     <tr>
       <th>max_depth</th>
       <th>int</th>
-      <th>2</th>
+      <th>3</th>
       <th align="left">The number of divisions of one triangle. <br> Must be greater than 0.</th>
     </tr>
     <tr>
@@ -108,4 +117,40 @@ If you edit `clipping_config.yaml` and then run `clipped_voronoi.py`, the update
       <th align="left">true or false. <br> If true, the 3D models are created using multiprocessing.</th>
     </tr>
 </table>
+
+#### sphere
+
+<table>
+   <tr>
+      <th>parameter</th>
+      <th>data type</th>
+      <th>default</th>
+      <th>description</th>
+    </tr>
+    <tr>
+      <th>cut_points</th>
+      <th>int</th>
+      <th>30</th>
+      <th align="left">The number of polyhedrons to divide a sphere into.</th>
+    </tr>
+    <tr>
+      <th>max_depth</th>
+      <th>int</th>
+      <th>3</th>
+      <th align="left">The number of divisions of one triangle. <br> Must be greater than 0.</th>
+    </tr>
+    <tr>
+      <th>scale</th>
+      <th>int</th>
+      <th>2</th>
+      <th align="left">The scale of the polyhedron. <br> Must be greater than 0.</th>
+    </tr>
+    <tr>
+      <th>multi_processing</th>
+      <th>bool</th>
+      <th>false</th>
+      <th align="left">true or false. <br> If true, the 3D models are created using multiprocessing.</th>
+    </tr>
+</table>
+
 
